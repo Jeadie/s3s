@@ -227,13 +227,13 @@
                 }
             }
         },
-        "com.amazonaws.s3#MinioMetadataKey": {
+        "com.amazonaws.s3#UserMetadataKey": {
             "type": "string",
             "traits": {
                 "s3s#minio": ""
             }
         },
-        "com.amazonaws.s3#MinioMetadataValue": {
+        "com.amazonaws.s3#UserMetadataValue": {
             "type": "string",
             "traits": {
                 "s3s#minio": ""
@@ -251,17 +251,17 @@
                 "s3s#minio": ""
             }
         },
-        "com.amazonaws.s3#MinioMetadataEntry": {
+        "com.amazonaws.s3#UserMetadataEntry": {
             "type": "structure",
             "members": {
                 "Key": {
-                    "target": "com.amazonaws.s3#MinioMetadataKey",
+                    "target": "com.amazonaws.s3#UserMetadataKey",
                     "traits": {
                         "smithy.api#required": {}
                     }
                 },
                 "Value": {
-                    "target": "com.amazonaws.s3#MinioMetadataValue",
+                    "target": "com.amazonaws.s3#UserMetadataValue",
                     "traits": {
                         "smithy.api#required": {}
                     }
@@ -271,10 +271,10 @@
                 "s3s#minio": ""
             }
         },
-        "com.amazonaws.s3#MinioMetadataEntries": {
+        "com.amazonaws.s3#UserMetadataEntries": {
             "type": "list",
             "member": {
-                "target": "com.amazonaws.s3#MinioMetadataEntry"
+                "target": "com.amazonaws.s3#UserMetadataEntry"
             },
             "traits": {
                 "s3s#minio": ""
@@ -284,7 +284,7 @@
             "type": "structure",
             "members": {
                 "Items": {
-                    "target": "com.amazonaws.s3#MinioMetadataEntries",
+                    "target": "com.amazonaws.s3#UserMetadataEntries",
                     "traits": {
                         "smithy.api#required": {},
                         "s3s#minio": ""

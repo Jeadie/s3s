@@ -14113,30 +14113,9 @@ impl FromStr for MetricsStatus {
 
 pub type MinioInternalCount = i32;
 
-pub type MinioMetadataEntries = List<MinioMetadataEntry>;
-
-#[derive(Clone, Default, PartialEq)]
-pub struct MinioMetadataEntry {
-    pub key: MinioMetadataKey,
-    pub value: MinioMetadataValue,
-}
-
-impl fmt::Debug for MinioMetadataEntry {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut d = f.debug_struct("MinioMetadataEntry");
-        d.field("key", &self.key);
-        d.field("value", &self.value);
-        d.finish_non_exhaustive()
-    }
-}
-
-pub type MinioMetadataKey = String;
-
-pub type MinioMetadataValue = String;
-
 #[derive(Clone, Default, PartialEq)]
 pub struct MinioUserMetadata {
-    pub items: MinioMetadataEntries,
+    pub items: UserMetadataEntries,
 }
 
 impl fmt::Debug for MinioUserMetadata {
@@ -22022,6 +22001,27 @@ impl fmt::Debug for UploadPartOutput {
 }
 
 pub type UserMetadata = List<MetadataEntry>;
+
+pub type UserMetadataEntries = List<UserMetadataEntry>;
+
+#[derive(Clone, Default, PartialEq)]
+pub struct UserMetadataEntry {
+    pub key: UserMetadataKey,
+    pub value: UserMetadataValue,
+}
+
+impl fmt::Debug for UserMetadataEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut d = f.debug_struct("UserMetadataEntry");
+        d.field("key", &self.key);
+        d.field("value", &self.value);
+        d.finish_non_exhaustive()
+    }
+}
+
+pub type UserMetadataKey = String;
+
+pub type UserMetadataValue = String;
 
 pub type Value = String;
 
@@ -36949,9 +36949,6 @@ impl DtoExt for MetricsAndOperator {
 impl DtoExt for MetricsConfiguration {
     fn ignore_empty_strings(&mut self) {}
 }
-impl DtoExt for MinioMetadataEntry {
-    fn ignore_empty_strings(&mut self) {}
-}
 impl DtoExt for MinioUserMetadata {
     fn ignore_empty_strings(&mut self) {}
 }
@@ -38564,6 +38561,9 @@ impl DtoExt for UploadPartOutput {
             self.server_side_encryption = None;
         }
     }
+}
+impl DtoExt for UserMetadataEntry {
+    fn ignore_empty_strings(&mut self) {}
 }
 impl DtoExt for VersioningConfiguration {
     fn ignore_empty_strings(&mut self) {
