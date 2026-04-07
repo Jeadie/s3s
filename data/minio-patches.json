@@ -239,13 +239,13 @@
                 "s3s#minio": ""
             }
         },
-        "com.amazonaws.s3#MinioUserTags": {
+        "com.amazonaws.s3#UserTags": {
             "type": "string",
             "traits": {
                 "s3s#minio": ""
             }
         },
-        "com.amazonaws.s3#MinioInternalCount": {
+        "com.amazonaws.s3#InternalCount": {
             "type": "integer",
             "traits": {
                 "s3s#minio": ""
@@ -280,7 +280,7 @@
                 "s3s#minio": ""
             }
         },
-        "com.amazonaws.s3#MinioUserMetadata": {
+        "com.amazonaws.s3#UserMetadataCollection": {
             "type": "structure",
             "members": {
                 "Items": {
@@ -299,14 +299,14 @@
             "type": "structure",
             "members": {
                 "K": {
-                    "target": "com.amazonaws.s3#MinioInternalCount",
+                    "target": "com.amazonaws.s3#InternalCount",
                     "traits": {
                         "smithy.api#required": {},
                         "s3s#minio": ""
                     }
                 },
                 "M": {
-                    "target": "com.amazonaws.s3#MinioInternalCount",
+                    "target": "com.amazonaws.s3#InternalCount",
                     "traits": {
                         "smithy.api#required": {},
                         "s3s#minio": ""
@@ -369,13 +369,13 @@
                     }
                 },
                 "UserMetadata": {
-                    "target": "com.amazonaws.s3#MinioUserMetadata",
+                    "target": "com.amazonaws.s3#UserMetadataCollection",
                     "traits": {
                         "s3s#minio": ""
                     }
                 },
                 "UserTags": {
-                    "target": "com.amazonaws.s3#MinioUserTags",
+                    "target": "com.amazonaws.s3#UserTags",
                     "traits": {
                         "s3s#minio": ""
                     }
@@ -425,13 +425,13 @@
                     }
                 },
                 "UserMetadata": {
-                    "target": "com.amazonaws.s3#MinioUserMetadata",
+                    "target": "com.amazonaws.s3#UserMetadataCollection",
                     "traits": {
                         "s3s#minio": ""
                     }
                 },
                 "UserTags": {
-                    "target": "com.amazonaws.s3#MinioUserTags",
+                    "target": "com.amazonaws.s3#UserTags",
                     "traits": {
                         "s3s#minio": ""
                     }
@@ -599,13 +599,13 @@
                     }
                 },
                 "UserMetadata": {
-                    "target": "com.amazonaws.s3#MinioUserMetadata",
+                    "target": "com.amazonaws.s3#UserMetadataCollection",
                     "traits": {
                         "s3s#minio": ""
                     }
                 },
                 "UserTags": {
-                    "target": "com.amazonaws.s3#MinioUserTags",
+                    "target": "com.amazonaws.s3#UserTags",
                     "traits": {
                         "s3s#minio": ""
                     }
