@@ -79,8 +79,8 @@ mod manually {
 
     #[cfg(feature = "minio")]
     use crate::dto::{
-        DeleteMarkerM, ListObjectVersionMEntry, ListObjectVersionsMOutput, ListObjectsV2MOutput, MinioUserMetadata,
-        ObjectInternalInfo, ObjectM, ObjectVersionM, TimestampFormat,
+        DeleteMarkerM, ListObjectVersionMEntry, ListObjectVersionsMOutput, ListObjectsV2MOutput, ObjectInternalInfo, ObjectM,
+        ObjectVersionM, TimestampFormat, UserMetadataCollection,
     };
 
     #[cfg(feature = "minio")]
@@ -302,7 +302,7 @@ mod manually {
     }
 
     #[cfg(feature = "minio")]
-    impl SerializeContent for MinioUserMetadata {
+    impl SerializeContent for UserMetadataCollection {
         fn serialize_content<W: std::io::Write>(&self, s: &mut Serializer<W>) -> SerResult {
             for item in &self.items {
                 if item.key.is_empty() {

@@ -4607,8 +4607,8 @@ pub struct DeleteMarkerM {
     pub key: Option<ObjectKey>,
     pub last_modified: Option<LastModified>,
     pub owner: Option<Owner>,
-    pub user_metadata: Option<MinioUserMetadata>,
-    pub user_tags: Option<MinioUserTags>,
+    pub user_metadata: Option<UserMetadataCollection>,
+    pub user_tags: Option<UserTags>,
     pub version_id: Option<ObjectVersionId>,
 }
 
@@ -11128,6 +11128,8 @@ impl FromStr for IntelligentTieringStatus {
     }
 }
 
+pub type InternalCount = i32;
+
 /// <p>Object is archived and inaccessible until restored.</p>
 /// <p>If the object you are retrieving is stored in the S3 Glacier Flexible Retrieval storage
 /// class, the S3 Glacier Deep Archive storage class, the S3 Intelligent-Tiering Archive Access
@@ -14111,44 +14113,6 @@ impl FromStr for MetricsStatus {
     }
 }
 
-pub type MinioInternalCount = i32;
-
-pub type MinioMetadataEntries = List<MinioMetadataEntry>;
-
-#[derive(Clone, Default, PartialEq)]
-pub struct MinioMetadataEntry {
-    pub key: MinioMetadataKey,
-    pub value: MinioMetadataValue,
-}
-
-impl fmt::Debug for MinioMetadataEntry {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut d = f.debug_struct("MinioMetadataEntry");
-        d.field("key", &self.key);
-        d.field("value", &self.value);
-        d.finish_non_exhaustive()
-    }
-}
-
-pub type MinioMetadataKey = String;
-
-pub type MinioMetadataValue = String;
-
-#[derive(Clone, Default, PartialEq)]
-pub struct MinioUserMetadata {
-    pub items: MinioMetadataEntries,
-}
-
-impl fmt::Debug for MinioUserMetadata {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut d = f.debug_struct("MinioUserMetadata");
-        d.field("items", &self.items);
-        d.finish_non_exhaustive()
-    }
-}
-
-pub type MinioUserTags = String;
-
 pub type Minutes = i32;
 
 pub type MissingMeta = i32;
@@ -14691,8 +14655,8 @@ pub type ObjectIdentifierList = List<ObjectIdentifier>;
 
 #[derive(Clone, Default, PartialEq)]
 pub struct ObjectInternalInfo {
-    pub k: MinioInternalCount,
-    pub m: MinioInternalCount,
+    pub k: InternalCount,
+    pub m: InternalCount,
 }
 
 impl fmt::Debug for ObjectInternalInfo {
@@ -14960,8 +14924,8 @@ pub struct ObjectM {
     pub owner: Option<Owner>,
     pub size: Option<Size>,
     pub storage_class: Option<ObjectStorageClass>,
-    pub user_metadata: Option<MinioUserMetadata>,
-    pub user_tags: Option<MinioUserTags>,
+    pub user_metadata: Option<UserMetadataCollection>,
+    pub user_tags: Option<UserTags>,
 }
 
 impl fmt::Debug for ObjectM {
@@ -15278,8 +15242,8 @@ pub struct ObjectVersionM {
     pub owner: Option<Owner>,
     pub size: Option<Size>,
     pub storage_class: Option<ObjectVersionStorageClass>,
-    pub user_metadata: Option<MinioUserMetadata>,
-    pub user_tags: Option<MinioUserTags>,
+    pub user_metadata: Option<UserMetadataCollection>,
+    pub user_tags: Option<UserTags>,
     pub version_id: Option<ObjectVersionId>,
 }
 
@@ -22022,6 +21986,42 @@ impl fmt::Debug for UploadPartOutput {
 }
 
 pub type UserMetadata = List<MetadataEntry>;
+
+#[derive(Clone, Default, PartialEq)]
+pub struct UserMetadataCollection {
+    pub items: UserMetadataEntries,
+}
+
+impl fmt::Debug for UserMetadataCollection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut d = f.debug_struct("UserMetadataCollection");
+        d.field("items", &self.items);
+        d.finish_non_exhaustive()
+    }
+}
+
+pub type UserMetadataEntries = List<UserMetadataEntry>;
+
+#[derive(Clone, Default, PartialEq)]
+pub struct UserMetadataEntry {
+    pub key: UserMetadataKey,
+    pub value: UserMetadataValue,
+}
+
+impl fmt::Debug for UserMetadataEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut d = f.debug_struct("UserMetadataEntry");
+        d.field("key", &self.key);
+        d.field("value", &self.value);
+        d.finish_non_exhaustive()
+    }
+}
+
+pub type UserMetadataKey = String;
+
+pub type UserMetadataValue = String;
+
+pub type UserTags = String;
 
 pub type Value = String;
 
@@ -36949,12 +36949,6 @@ impl DtoExt for MetricsAndOperator {
 impl DtoExt for MetricsConfiguration {
     fn ignore_empty_strings(&mut self) {}
 }
-impl DtoExt for MinioMetadataEntry {
-    fn ignore_empty_strings(&mut self) {}
-}
-impl DtoExt for MinioUserMetadata {
-    fn ignore_empty_strings(&mut self) {}
-}
 impl DtoExt for MultipartUpload {
     fn ignore_empty_strings(&mut self) {
         if let Some(ref val) = self.checksum_algorithm
@@ -38564,6 +38558,12 @@ impl DtoExt for UploadPartOutput {
             self.server_side_encryption = None;
         }
     }
+}
+impl DtoExt for UserMetadataCollection {
+    fn ignore_empty_strings(&mut self) {}
+}
+impl DtoExt for UserMetadataEntry {
+    fn ignore_empty_strings(&mut self) {}
 }
 impl DtoExt for VersioningConfiguration {
     fn ignore_empty_strings(&mut self) {

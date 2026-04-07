@@ -1805,8 +1805,8 @@ fn list_object_versions_m_route_resolved_before_standard_versions() {
 #[test]
 fn list_object_versions_m_serialize_http_includes_minio_metadata_fields() {
     use crate::dto::{
-        DeleteMarkerM, ListObjectVersionMEntry, ListObjectVersionsMOutput, MinioMetadataEntry, MinioUserMetadata,
-        ObjectInternalInfo, ObjectVersionM, Owner,
+        DeleteMarkerM, ListObjectVersionMEntry, ListObjectVersionsMOutput, ObjectInternalInfo, ObjectVersionM, Owner,
+        UserMetadataCollection, UserMetadataEntry,
     };
 
     let output = ListObjectVersionsMOutput {
@@ -1823,8 +1823,8 @@ fn list_object_versions_m_serialize_http_includes_minio_metadata_fields() {
                 version_id: Some("v1".to_string()),
                 is_latest: Some(true),
                 user_tags: Some("env=prod".to_string()),
-                user_metadata: Some(MinioUserMetadata {
-                    items: vec![MinioMetadataEntry {
+                user_metadata: Some(UserMetadataCollection {
+                    items: vec![UserMetadataEntry {
                         key: "project".to_string(),
                         value: "alpha".to_string(),
                     }],
@@ -1840,8 +1840,8 @@ fn list_object_versions_m_serialize_http_includes_minio_metadata_fields() {
                 key: Some("obj-b".to_string()),
                 version_id: Some("v2".to_string()),
                 is_latest: Some(false),
-                user_metadata: Some(MinioUserMetadata {
-                    items: vec![MinioMetadataEntry {
+                user_metadata: Some(UserMetadataCollection {
+                    items: vec![UserMetadataEntry {
                         key: "marker".to_string(),
                         value: "true".to_string(),
                     }],
@@ -1893,7 +1893,7 @@ fn list_objects_v2_m_route_resolved_before_standard_list_objects_v2() {
 #[cfg(feature = "minio")]
 #[test]
 fn list_objects_v2_m_serialize_http_includes_metadata_fields() {
-    use crate::dto::{ListObjectsV2MOutput, MinioMetadataEntry, MinioUserMetadata, ObjectInternalInfo, ObjectM, Owner};
+    use crate::dto::{ListObjectsV2MOutput, ObjectInternalInfo, ObjectM, Owner, UserMetadataCollection, UserMetadataEntry};
 
     let output = ListObjectsV2MOutput {
         name: Some("my-bucket".to_string()),
@@ -1906,8 +1906,8 @@ fn list_objects_v2_m_serialize_http_includes_metadata_fields() {
         contents: Some(vec![ObjectM {
             key: Some("prefix/object.txt".to_string()),
             user_tags: Some("env=prod".to_string()),
-            user_metadata: Some(MinioUserMetadata {
-                items: vec![MinioMetadataEntry {
+            user_metadata: Some(UserMetadataCollection {
+                items: vec![UserMetadataEntry {
                     key: "project".to_string(),
                     value: "alpha".to_string(),
                 }],
