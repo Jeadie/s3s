@@ -18,7 +18,9 @@ use std::path::Component;
 use std::path::{Path, PathBuf};
 
 use tokio::fs;
+use tokio::io::AsyncReadExt;
 use tokio::io::AsyncSeekExt;
+use tokio::io::AsyncWriteExt;
 use tokio_util::io::ReaderStream;
 
 use futures::TryStreamExt;
@@ -415,6 +417,7 @@ impl S3 for FileSystem {
             prefix: v2.prefix,
             max_keys: v2.max_keys,
             is_truncated: v2.is_truncated,
+            next_marker: v2.next_continuation_token,
             ..Default::default()
         }))
     }
@@ -938,14 +941,52 @@ impl S3 for FileSystem {
             bucket,
             key,
             upload_id,
+            if_match,
+            if_none_match,
             ..
         } = req.input;
 
         let Some(multipart_upload) = multipart_upload else { return Err(s3_error!(InvalidPart)) };
 
+        let parts_count = multipart_upload.parts.as_ref().map_or(0, Vec::len);
+        if parts_count == 0 {
+            return Err(s3_error!(InvalidPart, "You must specify at least one part"));
+        }
+
         let upload_id = Uuid::parse_str(&upload_id).map_err(|_| s3_error!(InvalidRequest))?;
         if self.verify_upload_id(req.credentials.as_ref(), &upload_id).await?.not() {
             return Err(s3_error!(AccessDenied));
+        }
+
+        // Check conditional headers before modifying any state
+        let object_path = self.get_object_path(&bucket, &key)?;
+        if let Some(ref condition) = if_none_match
+            && condition.is_any()
+            && object_path.exists()
+        {
+            return Err(s3_error!(PreconditionFailed, "Object already exists"));
+        }
+        if let Some(ref condition) = if_match {
+            if condition.is_any() {
+                // If-Match: * — require the object to exist
+                if !object_path.exists() {
+                    return Err(s3_error!(PreconditionFailed, "Object does not exist"));
+                }
+            } else if let Some(expected_etag) = condition.as_etag() {
+                if object_path.exists() {
+                    let info = self.load_internal_info(&bucket, &key).await?;
+                    let etag_value = match info.as_ref().and_then(crate::checksum::load_e_tag) {
+                        Some(e_tag) => e_tag,
+                        None => self.get_md5_sum(&bucket, &key).await?,
+                    };
+                    let existing_etag = ETag::Strong(etag_value);
+                    if !expected_etag.strong_cmp(&existing_etag) {
+                        return Err(s3_error!(PreconditionFailed, "ETag does not match"));
+                    }
+                } else {
+                    return Err(s3_error!(PreconditionFailed, "Object does not exist"));
+                }
+            }
         }
 
         self.delete_upload_id(&upload_id).await?;
@@ -955,15 +996,13 @@ impl S3 for FileSystem {
             let _ = self.delete_metadata(&bucket, &key, Some(upload_id));
         }
 
-        let object_path = self.get_object_path(&bucket, &key)?;
         let mut file_writer = self.prepare_file_write(&object_path).await?;
 
         let mut cnt: i32 = 0;
-        let total_parts_cnt = multipart_upload
-            .parts
-            .as_ref()
-            .map(|parts| i32::try_from(parts.len()).expect("total number of parts must be <= 10000."))
-            .unwrap_or_default();
+        let total_parts_cnt = i32::try_from(parts_count).expect("total number of parts must be <= 10000.");
+
+        let mut part_md5_hashes: Vec<[u8; 16]> = Vec::new();
+        let mut buf = vec![0u8; 65536];
 
         for part in multipart_upload.parts.into_iter().flatten() {
             let part_number = part
@@ -977,7 +1016,19 @@ impl S3 for FileSystem {
             let part_path = self.resolve_upload_part_path(upload_id, part_number)?;
 
             let mut reader = try_!(fs::File::open(&part_path).await);
-            let size = try_!(tokio::io::copy(&mut reader, &mut file_writer.writer()).await);
+            let mut part_md5 = Md5::new();
+            let mut size: u64 = 0;
+            loop {
+                let nread = try_!(reader.read(&mut buf).await);
+                if nread == 0 {
+                    break;
+                }
+                part_md5.update(&buf[..nread]);
+                try_!(file_writer.writer().write_all(&buf[..nread]).await);
+                size += nread as u64;
+            }
+            try_!(file_writer.writer().flush().await);
+            part_md5_hashes.push(part_md5.finalize());
 
             if part_number != total_parts_cnt && size < 5 * 1024 * 1024 {
                 return Err(s3_error!(EntityTooSmall));
@@ -988,14 +1039,18 @@ impl S3 for FileSystem {
         }
         file_writer.done().await?;
 
-        let file_size = try_!(fs::metadata(&object_path).await).len();
-        let md5_sum = self.get_md5_sum(&bucket, &key).await?;
+        // Compute multipart ETag: MD5 of concatenated part MD5 hashes, suffixed with part count
+        let mut etag_hash = Md5::new();
+        for hash in &part_md5_hashes {
+            etag_hash.update(hash);
+        }
+        let e_tag = format!("{}-{}", hex(etag_hash.finalize()), part_md5_hashes.len());
 
-        debug!(?md5_sum, path = %object_path.display(), size = ?file_size, "file md5 sum");
+        debug!(?e_tag, path = %object_path.display(), "multipart etag");
 
         {
             let mut info = self.load_internal_info(&bucket, &key).await?.unwrap_or_default();
-            crate::checksum::save_e_tag(&mut info, &md5_sum);
+            crate::checksum::save_e_tag(&mut info, &e_tag);
             self.save_internal_info(&bucket, &key, &info).await?;
         }
 
@@ -1005,7 +1060,7 @@ impl S3 for FileSystem {
                 Ok(CompleteMultipartUploadOutput {
                     bucket: Some(bucket),
                     key: Some(key),
-                    e_tag: Some(ETag::Strong(md5_sum)),
+                    e_tag: Some(ETag::Strong(e_tag)),
                     ..Default::default()
                 })
             })),
